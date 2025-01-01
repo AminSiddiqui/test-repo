@@ -16,14 +16,14 @@ jobs:
           BRANCH_NAME=$(echo ${{ github.head_ref }} | grep -i 'safety' || true)
           if [ -n "$BRANCH_NAME" ]; then
             echo "Branch contains 'safety', setting 2 reviews required."
-            echo "2-reviews-required=true" >> $GITHUB_ENV
+            echo "TWO_REVIEWS_REQUIRED=true" >> $GITHUB_ENV
           else
             echo "Branch does not contain 'safety', setting 1 review required."
-            echo "2-reviews-required=false" >> $GITHUB_ENV
+            echo "TWO_REVIEWS_REQUIRED=false" >> $GITHUB_ENV
           fi
 
       - name: Set Status Check for 2 reviews
-        if: env.2-reviews-required == 'true'
+        if: env.TWO_REVIEWS_REQUIRED == 'true'
         uses: peter-evans/status-check@v1
         with:
           context: "Required Review Count"
@@ -31,7 +31,7 @@ jobs:
           description: "2 reviews are required"
 
       - name: Set Status Check for 1 review
-        if: env.2-reviews-required != 'true'
+        if: env.TWO_REVIEWS_REQUIRED != 'true'
         uses: peter-evans/status-check@v1
         with:
           context: "Required Review Count"
