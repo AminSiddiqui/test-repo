@@ -1,41 +1,31 @@
-name: Required Approvals
+name: Enforce Review Conditions
 
 on:
   pull_request:
-    types: [opened, review_requested, review_comment]
-    branches-ignore:
-    - 'bugfix/k2web*'
-    - 'hotfix/k2web*'
-    - 'release/k2web*'
-
-permissions:
-  checks: write
-  pull-requests: read
+    types: [opened, synchronize, reopened]
 
 jobs:
-  required-approvals:
+  check-reviews:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check if source branch contains "safety"
-        id: check_branch
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check if branch contains 'safety'
         run: |
-          if [[ "${{ github.head_ref }}" == *safety* ]]; then
-            echo "apply-approval-requirements=true" >> $GITHUB_ENV
+          BRANCH_NAME=$(echo ${{ github.head_ref }} | grep -i 'safety' || true)
+          if [ -n "$BRANCH_NAME" ]; then
+            echo "Branch contains 'safety', setting 2 reviews required."
+            echo "2-reviews-required=true" >> $GITHUB_ENV
           else
-            echo "apply-approval-requirements=false" >> $GITHUB_ENV
+            echo "Branch does not contain 'safety', setting 1 review required."
+            echo "2-reviews-required=false" >> $GITHUB_ENV
           fi
 
-      - name: Enforce required approvals for safety branches
-        if: env.apply-approval-requirements == 'true'
-        uses: weetbix/configurable-required-approvals@v1
+      - name: Set Status Check
+        uses: peter-evans/status-check@v1
         with:
-          requirements: |
-            - patterns:
-                - "**/*"  # This means it applies to all files
-              requiredApprovals: 2
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Skip approvals for non-safety branches
-        if: env.apply-approval-requirements != 'true'
-        run: echo "No approval requirements applied for this branch."
+          context: "Required Review Count"
+          state: ${{ env.2-reviews-required == 'true' && 'failure' || 'success' }}
+          description: |
+            ${{ env.2-reviews-required == 'true' && '2 reviews are required' || '1 review is required' }}
