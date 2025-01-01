@@ -13,8 +13,6 @@ permissions:
   checks: write
   pull-requests: read
 
-env:
-    GITHUB_HEAD_REF: "${{ github.head_ref }}"
 jobs:
   required-approvals:
     runs-on: ubuntu-latest
@@ -23,7 +21,7 @@ jobs:
       - name: Check if source branch contains "safety"
         id: check_branch
         run: |
-          if [[ "${GITHUB_HEAD_REF,,}" == *safety* ]]; then
+          if [[ "${{ github.head_ref }}" == *safety* ]]; then
             echo "apply-approval-requirements=true" >> $GITHUB_ENV
           else
             echo "apply-approval-requirements=false" >> $GITHUB_ENV
