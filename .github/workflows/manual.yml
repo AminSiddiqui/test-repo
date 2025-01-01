@@ -2,8 +2,7 @@ name: Required Approvals
 
 on:
   pull_request:
-    types:
-    - opened
+    types: [opened, review_requested, review_comment]
     branches-ignore:
     - 'bugfix/k2web*'
     - 'hotfix/k2web*'
