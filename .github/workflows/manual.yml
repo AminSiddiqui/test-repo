@@ -22,10 +22,18 @@ jobs:
             echo "2-reviews-required=false" >> $GITHUB_ENV
           fi
 
-      - name: Set Status Check
+      - name: Set Status Check for 2 reviews
+        if: env.2-reviews-required == 'true'
         uses: peter-evans/status-check@v1
         with:
           context: "Required Review Count"
-          state: ${{ env.2-reviews-required == 'true' && 'failure' || 'success' }}
-          description: |
-            ${{ env.2-reviews-required == 'true' && '2 reviews are required' || '1 review is required' }}
+          state: failure
+          description: "2 reviews are required"
+
+      - name: Set Status Check for 1 review
+        if: env.2-reviews-required != 'true'
+        uses: peter-evans/status-check@v1
+        with:
+          context: "Required Review Count"
+          state: success
+          description: "1 review is required"
