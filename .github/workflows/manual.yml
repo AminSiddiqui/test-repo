@@ -1,0 +1,40 @@
+name: Required Approvals
+
+on:
+  pull_request:
+    types:
+    - opened
+    branches-ignore:
+    - 'bugfix/k2web*'
+    - 'hotfix/k2web*'
+    - 'release/k2web*'
+
+permissions:
+  checks: write
+  pull-requests: read
+
+jobs:
+  required-approvals:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if source branch contains "safety"
+        id: check_branch
+        run: |
+          if [[ "${{ github.head_ref }}" == *safety* ]]; then
+            echo "apply-approval-requirements=true" >> $GITHUB_ENV
+          else
+            echo "apply-approval-requirements=false" >> $GITHUB_ENV
+          fi
+
+      - name: Enforce required approvals for safety branches
+        if: env.apply-approval-requirements == 'true'
+        uses: weetbix/configurable-required-approvals@v1
+        with:
+          requirements: |
+            - requiredApprovals: 2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip approvals for non-safety branches
+        if: env.apply-approval-requirements != 'true'
+        run: echo "No approval requirements applied for this branch."
