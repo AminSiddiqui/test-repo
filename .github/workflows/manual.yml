@@ -2,7 +2,7 @@ name: Required Approvals
 
 on:
   pull_request_review:
-    types: [submitted, edited, dismissed]
+    types: [submitted, dismissed]
 
 permissions:
   checks: write
