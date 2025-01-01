@@ -18,13 +18,13 @@ jobs:
       - name: Check if source branch contains "safety"
         id: check-branch
         run: |
-          if [[ "${{ github.head_ref }}" == *safety* ]]; then
+          if [[ "${{ github.ref }}" == *safety* ]]; then
             echo "apply-approval-requirements=true" >> $GITHUB_ENV
           else
             echo "apply-approval-requirements=false" >> $GITHUB_ENV
           fi
         env:
-          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          GITHUB_HEAD_REF: ${{ github.ref }}
 
       - name: Get Pull Request Approvals
         id: get-approvals
