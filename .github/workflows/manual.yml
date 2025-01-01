@@ -32,7 +32,9 @@ jobs:
         uses: weetbix/configurable-required-approvals@v1
         with:
           requirements: |
-            - requiredApprovals: 2
+            - patterns:
+                - "**/*"  # This means it applies to all files
+              requiredApprovals: 2
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Skip approvals for non-safety branches
