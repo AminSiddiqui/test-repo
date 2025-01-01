@@ -2,7 +2,9 @@ name: Required Approvals
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
   pull_request_review:
+    types: [submitted]
 
 permissions:
   checks: write
@@ -14,6 +16,7 @@ jobs:
 
     steps:
       - name: Check if source branch contains "safety"
+        id: check-branch
         run: |
           if [[ "${{ github.head_ref }}" == *safety* ]]; then
             echo "apply-approval-requirements=true" >> $GITHUB_ENV
@@ -23,15 +26,36 @@ jobs:
         env:
           GITHUB_HEAD_REF: ${{ github.head_ref }}
 
-      - name: Enforce required approvals for safety branches
-        if: env.apply-approval-requirements == 'true'
-        uses: weetbix/configurable-required-approvals@v1
+      - name: Get Pull Request Approvals
+        id: get-approvals
+        uses: actions/github-script@v6
         with:
-          requirements: |
-            - patterns:
-                - "**/*"
-              requiredApprovals: 2
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            // Get unique approvals
+            const approvedReviews = new Set(
+              reviews.filter(review => review.state === 'APPROVED').map(review => review.user.login)
+            );
+
+            core.setOutput('approvals', approvedReviews.size);
+          result-encoding: string
+
+      - name: Check Approval Requirements
+        if: env.apply-approval-requirements == 'true'
+        run: |
+          APPROVALS=${{ steps.get-approvals.outputs.approvals }}
+          echo "Number of approvals: $APPROVALS"
+          if [[ $APPROVALS -lt 2 ]]; then
+            echo "❌ Not enough approvals. At least 2 are required."
+            exit 1
+          else
+            echo "✅ Approval requirements met."
+          fi
 
       - name: Skip approvals for non-safety branches
         if: env.apply-approval-requirements != 'true'
